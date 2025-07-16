@@ -56,9 +56,12 @@ def setup_mqtt():
 
     # Set username and password if required by your broker
     client.username_pw_set(username, password)
+    
 
     # Assign the on_connect function
     client.on_connect = on_connect
+    client.on_disconnect = on_disconnect
+
 
     # Connect to the MQTT broker
     client.connect(broker_address, int(broker_port))
@@ -66,6 +69,15 @@ def setup_mqtt():
     # Start the MQTT loop (it will handle reconnecting automatically)
     client.loop_start()
     return client
+    
+def on_disconnect(client, userdata, rc, properties=None):
+    print("MQTT client disconnected with result code "+str(rc))
+    if rc != 0:
+        print("Unexpected disconnect. Trying to reconnect.")
+        try:
+            client.reconnect()
+        except Exception as e:
+            print("Reconnect failed: " + str(e))
 
 
 def extract_flight_information(flight_icao):
@@ -206,7 +218,10 @@ def check_above_me(mqtt_client,url,topic):
                         # convert to json
                         json_message = json.dumps(data)
                         # Publish the JSON message to the MQTT broker
-                        mqtt_client.publish(topic, json_message)
+                        if mqtt_client.is_connected():
+                            mqtt_client.publish(topic, json_message)
+                        else:
+                            print("MQTT client is not connected. Skipping publish.")
                         
 
     except Exception as e:
