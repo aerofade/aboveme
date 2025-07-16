@@ -64,8 +64,9 @@ def setup_mqtt():
 
 
     # Connect to the MQTT broker
-    client.connect(broker_address, int(broker_port))
-
+    #client.connect(broker_address, int(broker_port))
+    client.connect_async(broker_address, int(broker_port))
+    
     # Start the MQTT loop (it will handle reconnecting automatically)
     client.loop_start()
     return client
